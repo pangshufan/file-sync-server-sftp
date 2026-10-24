@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "simple-sync-server"
+version = "0.5.0"
+description = "Desktop multi-user SFTP server"
+requires-python = ">=3.12"
+dependencies = ["asyncssh==2.24.1", "PySide6-Essentials>=6.8,<7", "watchdog>=6,<7"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10", "pytest-asyncio>=0.24,<2"]
+interop = ["paramiko>=3.5,<5"]
+build = ["pyinstaller==6.22.3"]
+
+[project.scripts]
+simple-sync-pull = "sync_server.client:main"
+simple-sync-serve = "sync_server.headless:main"
+
+[project.gui-scripts]
+simple-sync-server = "sync_server.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+sync_server = ["assets/*.svg", "assets/*.png", "locales/*.json"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

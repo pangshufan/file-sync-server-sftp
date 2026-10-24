@@ -1,0 +1,10 @@
+<service>
+  <id>SimpleSyncServer</id>
+  <name>Simple Sync SFTP Server</name>
+  <description>Multi-user SFTP and incremental file synchronization</description>
+  <executable>%BASE%\simple-sync-serve\simple-sync-serve.exe</executable>
+  <arguments>--data-dir "C:\ProgramData\SimpleSync"</arguments>
+  <stoptimeout>120 sec</stoptimeout>
+  <onfailure action="restart" delay="5 sec" />
+  <log mode="roll" />
+</service>

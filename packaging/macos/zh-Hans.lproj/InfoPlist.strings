@@ -1,0 +1,2 @@
+"CFBundleDisplayName" = "Simple Sync 文件服务";
+"NSLocalNetworkUsageDescription" = "通过 SFTP 向局域网提供所配置共享目录的文件访问服务。";

@@ -1,0 +1,19 @@
+[Unit]
+Description=Simple Sync SFTP Server
+After=network.target
+
+[Service]
+Type=simple
+User=simplesync
+Group=simplesync
+ExecStart=/opt/simple-sync/simple-sync-serve/simple-sync-serve --data-dir /var/lib/simple-sync
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=120
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

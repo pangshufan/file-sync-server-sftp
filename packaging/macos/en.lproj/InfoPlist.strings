@@ -1,0 +1,2 @@
+"CFBundleDisplayName" = "Simple Sync Server";
+"NSLocalNetworkUsageDescription" = "Provide SFTP access to configured shared folders on your local network.";

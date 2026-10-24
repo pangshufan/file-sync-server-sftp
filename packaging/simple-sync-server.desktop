@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Simple Sync Server
+Name[zh_CN]=Simple Sync 文件服务
+Name[zh]=Simple Sync 文件服务
+Comment=Multi-user SFTP and incremental file synchronization
+Comment[zh_CN]=多用户 SFTP 与增量文件同步
+Comment[zh]=多用户 SFTP 与增量文件同步
+Exec=SimpleSyncServer
+Icon=simple-sync-server
+Terminal=false
+Categories=Network;FileTransfer;

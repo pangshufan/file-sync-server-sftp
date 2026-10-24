@@ -1,0 +1,8 @@
+include README.md README.en.md environment.yml requirements-lock.txt start.command
+recursive-include docs *.md
+recursive-include packaging *.py *.spec *.desktop *.ico *.icns
+recursive-include packaging/services *.service *.plist *.xml
+recursive-include packaging/macos *.strings
+include tools/build_app.py tools/generate_icons.py
+include tools/benchmark_concurrency.py tools/benchmark_index.py
+include tools/check_translations.py
