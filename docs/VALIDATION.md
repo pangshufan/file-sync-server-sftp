@@ -2,6 +2,16 @@
 
 [English](en/VALIDATION.md)
 
+## 0.5.2 Windows 中文命令行编码修复（2026-10-25）
+
+用户的新 Windows Actions 日志已完成 PyInstaller 打包，失败发生在中文版客户端 `--help` 输出：CP1252 无法编码中文。本机在修复前设置 `PYTHONUTF8=0`、`PYTHONIOENCODING=cp1252:strict`，复现相同 UnicodeEncodeError。
+
+客户端和无头服务入口现在先初始化 UTF-8 stdout/stderr；三个冻结入口另配置 PyInstaller `X utf8=1`。构建脚本捕获两个 CLI 的中英文帮助，严格按 UTF-8 解码并核对语言内容，失败时保留子进程诊断。stdin 不变。
+
+最终完整回归 **86 passed，61.64 秒**；编码专项 **12 passed，0.80 秒**，覆盖两种语言的帮助和错误输出、真实 CP1252 文本流、无标准流、构建检查的异常保留及非 UTF-8 输出拒绝。翻译、文档链接和编译检查通过。
+
+在上述 CP1252 环境下运行完整 macOS arm64 构建成功，中英文 GUI 启动及冻结 CLI 帮助检查通过，生成 `dist/simple-sync-0.5.2-darwin-arm64.tar.gz`。这验证了本机打包入口，不代替 Windows 原生验证；当前未推送修改或触发新的 Windows Actions，仍待该平台重新构建确认。
+
 ## 0.5.1 Windows 构建兼容修复（2026-10-25）
 
 用户提供的 Windows Actions 日志为 **17 failed、51 passed、1 skipped**，失败发生在 pytest 阶段，尚未执行 PyInstaller。主要表现为摘要前签名误报/首次索引未就绪，以及将 Windows st_mode 与 POSIX 0600 比较。

@@ -71,6 +71,8 @@ Service installation/boot behavior remains unvalidated on target systems. Local 
 
 ## Windows build diagnostics
 
+If the log reaches Build complete but Chinese --help fails with a cp1252 UnicodeEncodeError, the failure is the frozen program's standard-output encoding. 0.5.2 fixes it through stream initialization and PyInstaller UTF-8 runtime options, without disabling Chinese checks. `python -m pytest tests/test_console.py -q` forces CP1252 on any host; the build script additionally checks actual bundled help output in both languages.
+
 An Actions failure during pytest is a test failure, before PyInstaller packaging. CI now runs `python tools/diagnose_filesystem.py` first, reporting a temporary file's path/descriptor metadata and normalized signatures. It attempts to upload a tests-<OS>-<arch> JUnit report even after test failure. Scan assertions include errors and root readiness state.
 
 Commit and push the fix, including new modules/scripts, then build that new revision manually or create a tag matching pyproject.toml, such as v0.5.1. Rerunning an old failed run uses its original revision rather than fetching subsequent fixes. The supplied Windows log reported 17 failed, 51 passed and 1 skipped before this fix; it is not post-fix Windows acceptance.

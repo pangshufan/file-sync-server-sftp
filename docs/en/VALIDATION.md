@@ -2,6 +2,16 @@
 
 [简体中文](../VALIDATION.md) | [English home](../../README.en.md)
 
+## 0.5.2 Windows Chinese console encoding fix (2026-10-25)
+
+The new Windows Actions log reached the end of PyInstaller packaging, then failed while printing Chinese client `--help`: CP1252 cannot encode Chinese. Before the fix, running locally with `PYTHONUTF8=0` and `PYTHONIOENCODING=cp1252:strict` reproduced the same UnicodeEncodeError.
+
+Client and headless entry points now initialize UTF-8 stdout/stderr before output; all three frozen entry points additionally configure PyInstaller `X utf8=1`. Build checks capture both CLI help texts in both languages, decode strictly as UTF-8 and verify localized content, preserving child diagnostics on failure. stdin is unchanged.
+
+Final regression: **86 passed in 61.64 seconds**. Encoding tests: **12 passed in 0.80 seconds**, covering bilingual help/errors, real CP1252 text streams, absent standard streams, build-check failure diagnostics and rejection of non-UTF-8 output. Translation, document links and compilation checks passed.
+
+The complete macOS arm64 build succeeded under the same CP1252 environment, including bilingual GUI startup and frozen CLI help checks, producing `dist/simple-sync-0.5.2-darwin-arm64.tar.gz`. This validates local bundled entry points, not native Windows execution. Changes have not been pushed or a new Windows Actions run triggered; that platform still requires a rebuild to confirm.
+
 ## 0.5.1 Windows build compatibility fix (2026-10-25)
 
 The supplied Windows Actions log reported **17 failed, 51 passed, 1 skipped** during pytest, before PyInstaller ran. Main failures were false pre-hash signature changes/unready initial indexes and comparing Windows st_mode with POSIX 0600.

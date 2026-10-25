@@ -46,6 +46,8 @@ CI 使用独立 Python 环境，不引用本机 Conda 绝对路径。GUI、客�
 
 0.5 所有入口均打包英文 JSON 词条，GUI 额外收集 Qt 简体中文标准控件翻译；归档包含 README.en.md 和 docs/en 全套英文文档。构建检查同时验证中英文启动，macOS 声明中英文支持，详见 [多语言说明](LOCALIZATION.md)。
 
+0.5.2 的三个 EXE 均显式启用 `X utf8=1`；不能只依赖工作流中的 PYTHONUTF8。源码工具子进程用 UTF-8 环境启动；冻结程序烟测则故意传入 PYTHONUTF8=0 / PYTHONIOENCODING=cp1252:strict，并捕获中英文帮助输出，严格按 UTF-8 解码和检查对应语言正文。失败子进程的 stdout/stderr 会先输出再报告失败，避免丢失实际报错。
+
 ## 启动与数据
 
 macOS 解压后可将 `.app` 拖入“应用程序”；Windows 解压后双击 exe；Linux 可直接运行 GUI 程序。Linux 附带 `.desktop` 模板，安装快捷方式时须将 `Exec` 改成实际可执行文件的绝对路径，将图标安装到用户图标目录并命名为 `simple-sync-server.png`，或将 `Icon` 改成图标绝对路径。

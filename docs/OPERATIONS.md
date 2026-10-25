@@ -71,6 +71,8 @@ python -m sync_server.headless --data-dir /absolute/path/to/state
 
 ## Windows 构建诊断
 
+如果日志已显示 Build complete，但中文 --help 阶段出现 cp1252 UnicodeEncodeError，则是冻结程序标准输出编码问题。0.5.2 通过入口输出初始化和 PyInstaller UTF-8 运行选项修复，不关闭中文测试。可用 `python -m pytest tests/test_console.py -q` 在任意平台强制 CP1252 环境验证；构建脚本还会验证实际打包程序的中英文 UTF-8 输出。
+
 如果 Actions 在 pytest 阶段失败，应先检查测试结果，尚不能据此判断 PyInstaller 打包失败。CI 现在在测试前运行 `python tools/diagnose_filesystem.py`，报告临时文件的路径/句柄时间字段与规范化签名；无论测试成功与否，都会尝试上传 `tests-<OS>-<arch>` JUnit 报告。扫描失败断言包含具体错误和根目录就绪状态。
 
 将修复代码（包括新增模块/脚本）提交并推送后，对该新提交手动运行构建，或创建与 pyproject.toml 版本对应的新标签，例如 v0.5.1。直接重跑旧失败 run 仍使用原提交，不会自动获取后来的修复。当前提供的 Windows 日志为 17 failed、51 passed、1 skipped；这些是修复前结果，不代表修复后 Windows 已验收。

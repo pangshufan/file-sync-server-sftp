@@ -15,6 +15,7 @@ from pathlib import Path, PurePosixPath
 import asyncssh
 
 from .i18n import tr
+from .console import configure_console_output
 from .sync_api import SyncError
 from .transport import request, server_identity
 
@@ -309,6 +310,7 @@ async def run_cli(args):
 
 
 def main():
+    configure_console_output()
     parser = argparse.ArgumentParser(description=tr('从 Simple Sync SFTP 服务端增量下载；默认保留本地多余文件'))
     parser.add_argument("host")
     parser.add_argument("destination")

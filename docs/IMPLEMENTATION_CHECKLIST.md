@@ -2,6 +2,14 @@
 
 [English](en/IMPLEMENTATION_CHECKLIST.md)
 
+## 0.5.2 Windows 中文输出修复（2026-10-25）
+
+- [x] CLI/无头入口在帮助及错误输出前显式配置 stdout/stderr UTF-8。
+- [x] 三个 PyInstaller 入口固定启用 UTF-8 解释器模式。
+- [x] 通过强制 CP1252 的中英文帮助/错误及捕获流回归，保留 stdin 与自定义流约定。
+- [x] 冻结程序烟测严格解码 UTF-8、验证语言正文，并保留失败子进程诊断。
+- [ ] 修复后 Windows 原生 Actions 运行结果待远程构建确认。
+
 ## 0.5.1 Windows 兼容修复（2026-10-25）
 
 - [x] 路径/句柄统一使用 Windows birthtime，避免 ctime 语义不一致导致扫描误报。

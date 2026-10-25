@@ -2,7 +2,7 @@
 
 [简体中文](README.md) | English
 
-A Python + PySide6 desktop server, version **0.5.1**. It provides multi-user SFTP, directory permissions, login restrictions, and **server-managed file-level incremental synchronization with shared progress per userid**.
+A Python + PySide6 desktop server, version **0.5.2**. It provides multi-user SFTP, directory permissions, login restrictions, and **server-managed file-level incremental synchronization with shared progress per userid**.
 
 ## Startup and environment
 

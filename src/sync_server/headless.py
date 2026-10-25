@@ -7,6 +7,7 @@ import signal
 from pathlib import Path
 
 from .i18n import tr
+from .console import configure_console_output
 from .config import ConfigStore
 from .server import SFTPService
 
@@ -62,6 +63,7 @@ async def serve(directory):
 
 
 def main():
+    configure_console_output()
     parser = argparse.ArgumentParser(description=tr('Simple Sync 无头 SFTP 服务（无 Qt 依赖）'))
     parser.add_argument("--data-dir", type=Path, required=True, help=tr('包含 config.json 的专用应用数据目录'))
     parser.add_argument("--check-config", action="store_true", help=tr('验证配置后退出，不监听端口'))

@@ -31,6 +31,8 @@ simple-sync-server
 
 持久 JSONL 的事件名和字段名保持不变，新生成的说明文本使用服务端语言。已有日志、SQLite 中保存的旧错误和客户端自行上报的错误文本不重写；第三方组件原生错误可能仍使用其自身语言。第三方客户端应依据错误码处理，不依赖 message 文案。
 
+0.5.2 起，客户端和无头入口在 argparse/提示输出之前，将可重新配置的 stdout/stderr 显式设为 UTF-8；管道和文件接收端按 UTF-8 解码。无 reconfigure 的自定义捕获对象保留原状，不在该步骤更改 stdin。PyInstaller 包还通过 spec 的 `X utf8=1` 在解释器启动时启用 UTF-8，避免冻结程序忽略 CI 的 Python 环境变量后回到 CP1252。详见 [PyInstaller 解释器选项](https://pyinstaller.org/en/stable/spec-files.html#specifying-python-interpreter-options)。
+
 ## 词条与打包
 
 src/sync_server/i18n.py 为无 Qt 的语言检测与格式化模块；中文源消息通过 tr 调用，英文位于 src/sync_server/locales/en.json。动态变量使用命名占位符，禁止把已经插值的字符串传入 tr。权限标签延迟翻译，避免 GUI 初始化前导入配置时固定语言。UI 状态显示与底层协议值分离。
