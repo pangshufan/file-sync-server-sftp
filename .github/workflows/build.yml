@@ -1,10 +1,10 @@
 name: Build desktop applications
 on:
   workflow_dispatch:
-  push:
-    tags: ["v*"]
+  release:
+    types: [published]
 permissions:
-  contents: read
+  contents: write
 jobs:
   build:
     strategy:
@@ -38,3 +38,18 @@ jobs:
             dist/*.tar.gz
             dist/*.zip
           if-no-files-found: error
+      - name: Upload Release assets
+        if: github.event_name == 'release'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          shopt -s nullglob
+          files=(dist/*.tar.gz dist/*.zip)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No release packages found"
+            exit 1
+          fi
+          gh release upload "$RELEASE_TAG" "${files[@]}"
