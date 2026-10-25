@@ -46,6 +46,8 @@ CI uses an independent Python environment, without this machine's absolute Conda
 
 0.5 includes the application English JSON catalog in every bundle, Qt's Simplified Chinese stock-dialog catalog in the GUI, and Chinese/English documentation in the release archive. Build smoke checks run both language overrides. macOS declares English and Simplified Chinese localizations. See [Localization](LOCALIZATION.md).
 
+From 0.5.2, all three EXE targets explicitly enable `X utf8=1`; the workflow's PYTHONUTF8 alone is insufficient. Source build tools use a UTF-8 environment. Frozen smoke checks deliberately receive PYTHONUTF8=0 / PYTHONIOENCODING=cp1252:strict, capture both languages' help, decode UTF-8 strictly and check expected language text. Failed child output is displayed before raising so the underlying diagnostics remain visible.
+
 ## Startup and state
 
 On macOS, extract and optionally move the .app into Applications. On Windows, extract and double-click the exe. On Linux, run the GUI executable. For the supplied .desktop template, replace Exec with the executable's absolute path, and install simple-sync-server.png into a user icon directory or set Icon to its absolute path.

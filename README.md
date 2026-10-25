@@ -2,7 +2,7 @@
 
 简体中文 | [English](README.en.md)
 
-Python + PySide6 桌面服务端，当前版本 0.5.1。提供多用户 SFTP、目录权限、登录限制，以及 **server 配置、按 userid 共享进度的文件级增量同步**。
+Python + PySide6 桌面服务端，当前版本 0.5.2。提供多用户 SFTP、目录权限、登录限制，以及 **server 配置、按 userid 共享进度的文件级增量同步**。
 
 ## 启动与环境
 

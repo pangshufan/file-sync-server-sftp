@@ -31,6 +31,8 @@ Coverage includes the main window, user/permission/key/sync settings, login prot
 
 JSONL event/field identifiers remain unchanged; new human-readable text follows the server language. Existing logs, old database error strings and client-reported text are not rewritten. Third-party native errors may use their own language. Third-party clients should act on error codes, never translated message text.
 
+From 0.5.2, client/headless entry points explicitly set reconfigurable stdout/stderr to UTF-8 before argparse or prompts. Pipe/file consumers must decode UTF-8. Custom streams without reconfigure are left intact; this step does not change stdin. Bundles also enable interpreter UTF-8 mode with `X utf8=1` in the spec, since frozen applications ignore Python environment settings and could otherwise use CP1252. See [PyInstaller interpreter options](https://pyinstaller.org/en/stable/spec-files.html#specifying-python-interpreter-options).
+
 ## Catalogs and distribution
 
 src/sync_server/i18n.py provides Qt-free detection and formatting. Chinese source messages use tr calls; English translations reside in src/sync_server/locales/en.json. Dynamic values use named placeholders. Never pass an already interpolated string to tr. Permission labels translate lazily so importing configuration before GUI initialization cannot freeze their language. Displayed status labels are separate from protocol values.

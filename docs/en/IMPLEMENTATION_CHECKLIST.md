@@ -2,6 +2,14 @@
 
 [简体中文](../IMPLEMENTATION_CHECKLIST.md) | [English home](../../README.en.md)
 
+## 0.5.2 Windows Chinese output fix (2026-10-25)
+
+- [x] Explicit UTF-8 stdout/stderr initialization before client/headless help and errors.
+- [x] UTF-8 interpreter mode in all three PyInstaller entry points.
+- [x] Forced-CP1252 bilingual help/error and capture-stream regressions; preserve stdin/custom-stream behavior.
+- [x] Strict UTF-8/language checks in frozen smoke tests, preserving failed-child diagnostics.
+- [ ] Native Windows Actions rerun after the fix remains pending.
+
 ## 0.5.1 Windows compatibility fix (2026-10-25)
 
 - [x] Normalize path/descriptor signatures with Windows birthtime rather than inconsistent ctime semantics.
