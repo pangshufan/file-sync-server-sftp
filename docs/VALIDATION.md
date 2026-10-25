@@ -4,6 +4,10 @@
 
 ## 0.5.2 Windows 中文命令行编码修复（2026-10-25）
 
+后续 Windows Actions 反馈 **1 failed、84 passed、1 skipped**：新编码测试错误地固定要求 LF，而 Windows 默认文本流输出 CRLF。这是测试断言遗漏平台差异。现保留原生换行，并额外参数化 LF/CRLF，严格验证 UTF-8 内容和换行策略均被保留；编码专项 **14 passed，0.78 秒**。应用代码与打包配置无需改变；修正后的 Windows 原生 Actions 结果仍待确认。
+
+换行测试修正后，macOS arm64 完整回归 **88 passed，61.75 秒**；翻译和中英文文档检查通过。
+
 用户的新 Windows Actions 日志已完成 PyInstaller 打包，失败发生在中文版客户端 `--help` 输出：CP1252 无法编码中文。本机在修复前设置 `PYTHONUTF8=0`、`PYTHONIOENCODING=cp1252:strict`，复现相同 UnicodeEncodeError。
 
 客户端和无头服务入口现在先初始化 UTF-8 stdout/stderr；三个冻结入口另配置 PyInstaller `X utf8=1`。构建脚本捕获两个 CLI 的中英文帮助，严格按 UTF-8 解码并核对语言内容，失败时保留子进程诊断。stdin 不变。

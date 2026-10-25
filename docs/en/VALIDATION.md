@@ -4,6 +4,10 @@
 
 ## 0.5.2 Windows Chinese console encoding fix (2026-10-25)
 
+A subsequent Windows Actions run reported **1 failed, 84 passed, 1 skipped**: the new encoding test incorrectly required LF, while Windows native text streams produce CRLF. This was a platform assumption in the assertion. The test now covers native newlines plus explicit LF/CRLF and strictly verifies both UTF-8 content and preservation of newline policy. Encoding tests: **14 passed in 0.78 seconds**. Application code and packaging configuration need no change; the corrected native Windows Actions result remains pending.
+
+After the newline test correction, the full macOS arm64 regression reported **88 passed in 61.75 seconds**. Translation and bilingual document checks passed.
+
 The new Windows Actions log reached the end of PyInstaller packaging, then failed while printing Chinese client `--help`: CP1252 cannot encode Chinese. Before the fix, running locally with `PYTHONUTF8=0` and `PYTHONIOENCODING=cp1252:strict` reproduced the same UnicodeEncodeError.
 
 Client and headless entry points now initialize UTF-8 stdout/stderr before output; all three frozen entry points additionally configure PyInstaller `X utf8=1`. Build checks capture both CLI help texts in both languages, decode strictly as UTF-8 and verify localized content, preserving child diagnostics on failure. stdin is unchanged.
