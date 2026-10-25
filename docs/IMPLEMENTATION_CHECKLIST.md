@@ -2,6 +2,15 @@
 
 [English](en/IMPLEMENTATION_CHECKLIST.md)
 
+## 0.5.1 Windows 兼容修复（2026-10-25）
+
+- [x] 路径/句柄统一使用 Windows birthtime，避免 ctime 语义不一致导致扫描误报。
+- [x] 摘要与自动确认保留原始句柄 ctime 前后检查，拒绝真实变更。
+- [x] Windows 不断言 POSIX 0600；POSIX 仍保持严格权限检查。
+- [x] 补充模拟 Windows 差异、真实文件及自动确认回归测试。
+- [x] CI 输出原生文件元数据，并在测试失败时上传 JUnit；完善双语诊断说明。
+- [ ] 修复后 Windows 原生 Actions 运行结果待远程构建确认。
+
 ## 0.5.0 多语言（2026-10-24）
 
 - [x] 系统 UI 语言偏好匹配，简体中文/英文与英文回退。

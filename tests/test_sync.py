@@ -23,7 +23,7 @@ async def ready(service):
         if state['roots'] and all(row['ready'] for row in state['roots']):
             return
         await asyncio.sleep(.05)
-    pytest.fail('index did not become ready')
+    pytest.fail(f'index did not become ready: {state!r}')
 
 
 async def page(sftp, **args):
@@ -32,7 +32,8 @@ async def page(sftp, **args):
 
 
 async def rescan(service, root):
-    assert (await asyncio.to_thread(service.index.scan, root_id(str(root))))['ok']
+    result = await asyncio.to_thread(service.index.scan, root_id(str(root)))
+    assert result['ok'], result
     for user in service.config.users:
         if user.enabled and user.sync_enabled:
             await asyncio.to_thread(service.sync_api.refresh, user)

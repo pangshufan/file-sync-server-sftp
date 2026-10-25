@@ -2,7 +2,7 @@
 
 简体中文 | [English](README.en.md)
 
-Python + PySide6 桌面服务端，当前版本 0.5.0。提供多用户 SFTP、目录权限、登录限制，以及 **server 配置、按 userid 共享进度的文件级增量同步**。
+Python + PySide6 桌面服务端，当前版本 0.5.1。提供多用户 SFTP、目录权限、登录限制，以及 **server 配置、按 userid 共享进度的文件级增量同步**。
 
 ## 启动与环境
 
@@ -145,7 +145,7 @@ async def pull(password):
 
 ## 数据、迁移和边界
 
-应用数据目录显示在窗口底部。配置为 `config.json`，数据库为 `sync.sqlite3`，主机密钥为 `ssh_host_ed25519_key`。密码采用带随机盐的 scrypt 哈希；数据目录 0700，配置、数据库和密钥 0600。WAL 文件位于受保护目录中。数据库不要置于网络共享或同步目标内。
+应用数据目录显示在窗口底部。配置为 `config.json`，数据库为 `sync.sqlite3`，主机密钥为 `ssh_host_ed25519_key`。密码采用带随机盐的 scrypt 哈希；支持 POSIX 权限的平台上，数据目录 0700，配置、数据库和密钥 0600；Windows 访问范围由 ACL 决定，chmod 不提供同等的权限位语义。WAL 文件位于受保护目录中。数据库不要置于网络共享或同步目标内。
 
 [升级/回滚说明](docs/MIGRATION.md) 解释自动备份、旧进度不合并、userid 生成和客户端状态迁移。升级前停止旧程序；首次升级会备份配置及 SQLite 的一致性快照。
 

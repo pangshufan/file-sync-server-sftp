@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "simple-sync-server"
-version = "0.5.0"
+version = "0.5.1"
 description = "Desktop multi-user SFTP server"
 requires-python = ">=3.12"
 dependencies = ["asyncssh==2.24.1", "PySide6-Essentials>=6.8,<7", "watchdog>=6,<7"]
