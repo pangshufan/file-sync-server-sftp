@@ -49,10 +49,13 @@ def test_localized_errors_are_utf8_under_cp1252(module, language, tmp_path):
     assert "UnicodeEncodeError" not in error
 
 
-def test_reconfigures_both_real_streams_without_losing_unicode(monkeypatch):
+@pytest.mark.parametrize("newline", [None, "\n", "\r\n"], ids=["native", "lf", "crlf"])
+def test_reconfigures_both_real_streams_without_losing_unicode(monkeypatch, newline):
     stdout_bytes, stderr_bytes = io.BytesIO(), io.BytesIO()
-    stdout = io.TextIOWrapper(stdout_bytes, encoding="cp1252", errors="strict")
-    stderr = io.TextIOWrapper(stderr_bytes, encoding="cp1252", errors="strict")
+    stdout = io.TextIOWrapper(stdout_bytes, encoding="cp1252", errors="strict", newline=newline)
+    stderr = io.TextIOWrapper(stderr_bytes, encoding="cp1252", errors="strict", newline=newline)
+    # Encoding configuration must preserve the stream's newline policy.
+    expected_newline = os.linesep if newline is None else newline
     with monkeypatch.context() as context:
         context.setattr(sys, "stdout", stdout)
         context.setattr(sys, "stderr", stderr)
@@ -61,8 +64,8 @@ def test_reconfigures_both_real_streams_without_losing_unicode(monkeypatch):
         stderr.write("中文错误\n")
         stdout.flush()
         stderr.flush()
-        assert stdout_bytes.getvalue().decode("utf-8") == "中文输出 😀\n"
-        assert stderr_bytes.getvalue().decode("utf-8") == "中文错误\n"
+        assert stdout_bytes.getvalue().decode("utf-8") == "中文输出 😀" + expected_newline
+        assert stderr_bytes.getvalue().decode("utf-8") == "中文错误" + expected_newline
     stdout.detach()
     stderr.detach()
 
