@@ -10,7 +10,9 @@ import threading
 import time
 from contextlib import contextmanager
 from pathlib import Path
+
 from .i18n import tr
+from .file_state import descriptor_signature, file_signature
 
 BATCH_SIZE = 200
 
@@ -206,9 +208,7 @@ class IndexStore:
             db.execute("UPDATE roots SET ready=0 WHERE id=?", (identifier,))
         return identifier
 
-    @staticmethod
-    def signature(info):
-        return info.st_size, info.st_mtime_ns, info.st_ctime_ns, info.st_ino
+    signature = staticmethod(file_signature)
 
     def inspect(self, path: Path, old, force=False):
         before = path.lstat()
@@ -223,13 +223,15 @@ class IndexStore:
             return ("file", *signature, old["digest"], old["hash_at"])
         digest = hashlib.sha256()
         with path.open("rb") as stream:
-            if self.signature(os.fstat(stream.fileno())) != signature:
+            opened = os.fstat(stream.fileno())
+            if self.signature(opened) != signature:
                 raise OSError(tr('文件在摘要计算前发生变化'))
+            opened_signature = descriptor_signature(opened)
             while block := stream.read(1024 * 1024):
                 if self.cancel.is_set():
                     raise InterruptedError(tr('扫描已停止'))
                 digest.update(block)
-            if self.signature(os.fstat(stream.fileno())) != signature:
+            if descriptor_signature(os.fstat(stream.fileno())) != opened_signature:
                 raise OSError(tr('文件仍在写入，等待下次扫描'))
         if self.signature(path.lstat()) != signature:
             raise OSError(tr('文件在摘要计算期间被替换'))

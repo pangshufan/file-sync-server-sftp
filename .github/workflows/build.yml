@@ -25,8 +25,17 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libegl1 libopengl0 libxkbcommon0 libdbus-1-3 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1 libxkbcommon-x11-0
       - name: Install build dependencies
         run: python -m pip install ".[build,dev,interop]"
+      - name: Report filesystem metadata
+        run: python tools/diagnose_filesystem.py
       - name: Run functional acceptance tests
-        run: python -m pytest -q
+        run: python -m pytest -q --junitxml=build/test-results/pytest.xml
+      - name: Upload test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tests-${{ runner.os }}-${{ runner.arch }}
+          path: build/test-results/pytest.xml
+          if-no-files-found: warn
       - name: Check translations and documentation pairs
         run: python tools/check_translations.py
       - name: Build native GUI and CLI

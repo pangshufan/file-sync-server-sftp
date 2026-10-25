@@ -178,7 +178,13 @@ def test_password_and_configuration(tmp_path):
     store.save(config)
     assert store.load() == config
     assert '"password"' not in store.path.read_text()
-    assert store.path.stat().st_mode & 0o777 == 0o600
+    if os.name == "nt":
+        # Windows chmod does not implement POSIX owner/group permission bits.
+        # Check actual usability; access isolation is enforced by Windows ACLs.
+        with store.path.open("r+b"):
+            pass
+    else:
+        assert store.path.stat().st_mode & 0o777 == 0o600
     config.users.append(config.users[0])
     with pytest.raises(ValueError, match="用户名重复"):
         store.save(config)

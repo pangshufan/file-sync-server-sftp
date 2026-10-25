@@ -6,3 +6,4 @@ recursive-include packaging/macos *.strings
 include tools/build_app.py tools/generate_icons.py
 include tools/benchmark_concurrency.py tools/benchmark_index.py
 include tools/check_translations.py
+include tools/diagnose_filesystem.py

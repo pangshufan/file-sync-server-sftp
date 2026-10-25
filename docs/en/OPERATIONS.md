@@ -12,6 +12,8 @@ Change-log cleanup has an approximately one-second budget per run; completion/of
 
 `sync_status()` exposes database operation counts, cumulative waits, maximum write transaction duration and maximum write-lock wait. These include initialization, scanning and maintenance rather than SQL execution time alone. The dedicated per-file scan reader is not included. Stopping the server closes the pool.
 
+0.5.1 fixes Windows ctime differences between stat/lstat and fstat. Cross-API signatures use size, mtime, birthtime and file ID on Windows, while POSIX retains ctime. Hashing and automatic confirmation also compare raw ctime/device-ID snapshots from the same open handle to reject real changes; simply dropping ctime checks would weaken protection. Windows birthtime is creation time and does not prove unchanged contents. Checksums, read coverage and handle checks still apply, and periodic hash audits remain enabled.
+
 ## Persistent runtime logs
 
 Logs reside in `logs/server.jsonl` inside the data directory: UTF-8 JSONL with UTC timestamps. Each file is approximately limited to 5 MiB, with five rotated backups, approximately 30 MiB total. POSIX directory/file modes are 0700/0600. On Windows, access is determined by OS ACLs.
@@ -66,6 +68,12 @@ Templates are in packaging/services, or services in release archives:
 - **Windows:** simple-sync-winsw.xml requires a separately provided WinSW executable, placed with matching XML naming. Edit data-dir, then have an administrator run the wrapper's install/start commands. Configure its account and ACLs. The program is not a native SCM service registerable directly with sc.exe.
 
 Service installation/boot behavior remains unvalidated on target systems. Local tests cover macOS headless subprocess startup and clean SIGTERM exit. No service or startup setting is installed automatically.
+
+## Windows build diagnostics
+
+An Actions failure during pytest is a test failure, before PyInstaller packaging. CI now runs `python tools/diagnose_filesystem.py` first, reporting a temporary file's path/descriptor metadata and normalized signatures. It attempts to upload a tests-<OS>-<arch> JUnit report even after test failure. Scan assertions include errors and root readiness state.
+
+Commit and push the fix, including new modules/scripts, then build that new revision manually or create a tag matching pyproject.toml, such as v0.5.1. Rerunning an old failed run uses its original revision rather than fetching subsequent fixes. The supplied Windows log reported 17 failed, 51 passed and 1 skipped before this fix; it is not post-fix Windows acceptance.
 
 ## Classified configuration reload
 

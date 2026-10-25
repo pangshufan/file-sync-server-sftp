@@ -12,6 +12,8 @@
 
 `sync_status()` 返回 database 指标：读写调用数、累计等待秒数、最长写事务/写锁等待。统计包括初始化、扫描和维护，不等同于纯 SQL 执行时间；接口统计不包含扫描专用逐文件读连接。停止服务关闭连接池。
 
+0.5.1 修复 Windows 上 stat/lstat 与 fstat 的 ctime 语义差异：路径/句柄交叉比较使用大小、mtime、birthtime 和文件 ID；POSIX 继续使用 ctime。摘要和自动确认还分别保存同一打开句柄的原始 ctime/设备 ID 快照，前后比较以拒绝真实变更，不能简单删除 ctime 检查。Windows birthtime 是创建时间，并不单独证明内容未变；完整性仍依赖摘要、读取区间和句柄检查，保留定期摘要复核。
+
 ## 持久运行日志
 
 日志位于应用数据目录 `logs/server.jsonl`，UTF-8 JSONL、UTC 时间。每个文件最多约 5 MiB，保留 5 个轮转文件，合计约 30 MiB。目录/文件采用 POSIX 0700/0600；Windows 应用数据目录的访问范围由系统 ACL 决定。
@@ -66,6 +68,12 @@ python -m sync_server.headless --data-dir /absolute/path/to/state
 - Windows：simple-sync-winsw.xml 是 WinSW 包装配置，需自行提供 WinSW 可执行文件，并按 WinSW 的同名 XML 规则放置；修改 data-dir，管理员执行包装器 install/start。运行账号和 ACL 由部署者配置。程序不是可由 sc.exe 直接注册的原生 SCM 服务。
 
 模板尚未进行对应系统的服务安装/开机验收，本次只验证 macOS 无头子进程的启动和 SIGTERM 正常退出。不会自动安装服务或修改本机开机设置。
+
+## Windows 构建诊断
+
+如果 Actions 在 pytest 阶段失败，应先检查测试结果，尚不能据此判断 PyInstaller 打包失败。CI 现在在测试前运行 `python tools/diagnose_filesystem.py`，报告临时文件的路径/句柄时间字段与规范化签名；无论测试成功与否，都会尝试上传 `tests-<OS>-<arch>` JUnit 报告。扫描失败断言包含具体错误和根目录就绪状态。
+
+将修复代码（包括新增模块/脚本）提交并推送后，对该新提交手动运行构建，或创建与 pyproject.toml 版本对应的新标签，例如 v0.5.1。直接重跑旧失败 run 仍使用原提交，不会自动获取后来的修复。当前提供的 Windows 日志为 17 failed、51 passed、1 skipped；这些是修复前结果，不代表修复后 Windows 已验收。
 
 ## 分类重载
 

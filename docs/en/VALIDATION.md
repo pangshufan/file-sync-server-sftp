@@ -2,6 +2,20 @@
 
 [简体中文](../VALIDATION.md) | [English home](../../README.en.md)
 
+## 0.5.1 Windows build compatibility fix (2026-10-25)
+
+The supplied Windows Actions log reported **17 failed, 51 passed, 1 skipped** during pytest, before PyInstaller ran. Main failures were false pre-hash signature changes/unready initial indexes and comparing Windows st_mode with POSIX 0600.
+
+After the fix, local macOS arm64 regression reported **74 passed in 61.52 seconds**, producing build/test-results/pytest.xml. The five added cases separately reported **5 passed in 4.34 seconds**. They cover rewritten native files, simulated Windows ctime disagreement and index readiness, rejected hashing after handle metadata changes, and both valid automatic confirmation and rejection of changes with restored size/mtime. Translation, document links and compileall checks passed.
+
+Cross-API comparisons use explicit Windows birthtime while POSIX retains ctime. Same-handle raw ctime and device IDs still guard hashing/confirmation. Windows permission tests verify actual config usability, without claiming chmod implements ACL isolation; POSIX 0600 assertions remain. Database/config/protocol schemas are unchanged.
+
+CI now reports native metadata, attempts to retain JUnit diagnostics even on failure, and includes scan errors in assertions. Changes have not been pushed to GitHub, and no post-fix native Windows runner result is available. Local simulation is not a substitute for that rerun.
+
+0.5.1 macOS arm64 packaging and bilingual GUI/client/headless startup checks passed, confirming the new shared signature module loads in bundled entry points. This is not Windows packaging acceptance.
+
+References: [CPython timestamp discrepancy report](https://github.com/python/cpython/issues/157671), [Python 3.12 path stat implementation](https://github.com/python/cpython/blob/3.12/Modules/posixmodule.c), [Windows chmod semantics](https://docs.python.org/3.12/library/os.html#os.chmod).
+
 ## 0.5.0 localization (2026-10-24)
 
 - Full regression: **69 passed in 56.88 seconds**. After display-name/resource/checker adjustments, localization tests: **12 passed in 0.69 seconds**.

@@ -17,6 +17,7 @@ from .config import Config, ConfigStore, User, policy_path, verify_password
 from .auth_limits import AuthLimits
 from .audit import AuditLog
 from .process_lock import ProcessLock
+from .file_state import descriptor_signature
 
 
 class RestrictedSFTP(asyncssh.SFTPServer):
@@ -83,11 +84,14 @@ class RestrictedSFTP(asyncssh.SFTPServer):
         file_obj = super().open(path, pflags, attrs)
         writing = pflags & (asyncssh.FXF_WRITE | asyncssh.FXF_APPEND | asyncssh.FXF_CREAT | asyncssh.FXF_TRUNC)
         if not writing and self.sync_api and self.user.confirmation == "auto":
-            signature = self.sync_api.store.signature(os.fstat(file_obj.fileno()))
+            opened = os.fstat(file_obj.fileno())
+            signature = self.sync_api.store.signature(opened)
             try:
                 item = await asyncio.to_thread(self.sync_api.auto_candidate, self.user, self.normalized(path), signature)
                 if item:
-                    self.downloads[file_obj] = {"item": item, "signature": signature, "path": path, "ranges": [], "failed": False}
+                    self.downloads[file_obj] = {"item": item, "signature": signature,
+                                                "descriptor_signature": descriptor_signature(opened),
+                                                "path": path, "ranges": [], "failed": False}
             except Exception as exc:
                 self.emit("log", tr('自动确认准备失败，文件仍可正常下载 · {value0}', value0=exc))
         return file_obj
@@ -130,7 +134,7 @@ class RestrictedSFTP(asyncssh.SFTPServer):
                 size = tracked["signature"][0]
                 covered = size == 0 or tracked["ranges"] == [(0, size)]
                 signature = self.sync_api.store.signature
-                complete = (covered and signature(os.fstat(file_obj.fileno())) == tracked["signature"]
+                complete = (covered and descriptor_signature(os.fstat(file_obj.fileno())) == tracked["descriptor_signature"]
                             and signature(os.stat(self.map_path(tracked["path"]))) == tracked["signature"])
             except (OSError, asyncssh.SFTPError):
                 pass

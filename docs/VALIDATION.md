@@ -2,6 +2,20 @@
 
 [English](en/VALIDATION.md)
 
+## 0.5.1 Windows 构建兼容修复（2026-10-25）
+
+用户提供的 Windows Actions 日志为 **17 failed、51 passed、1 skipped**，失败发生在 pytest 阶段，尚未执行 PyInstaller。主要表现为摘要前签名误报/首次索引未就绪，以及将 Windows st_mode 与 POSIX 0600 比较。
+
+修复后本机 macOS arm64 完整回归 **74 passed，61.52 秒**，生成 build/test-results/pytest.xml；新增 5 个测试单独运行 **5 passed，4.34 秒**。覆盖实际文件重写后的路径/句柄签名、模拟 Windows ctime 差异的索引就绪、句柄元数据变化时拒绝摘要，以及自动确认正常成功/恢复大小和 mtime 后仍拒绝真实变更。翻译、文档链接和 compileall 检查通过。
+
+Windows 交叉查询使用显式 birthtime，POSIX 保留 ctime；同一句柄的原始 ctime 和设备 ID 仍参与摘要/确认前后比较。Windows 权限测试验证配置可读写，不声称 chmod 等价于 ACL；POSIX 0600 断言保留。数据库、配置及协议 schema 不变。
+
+CI 新增原生元数据输出和始终尝试上传的 JUnit 诊断报告，扫描断言含实际错误。当前没有将工作区修复推送到 GitHub，也未获得修复后 Windows 原生 runner 的结果；本机模拟回归不能替代该次构建确认。
+
+0.5.1 macOS arm64 打包与中英文 GUI/CLI/无头入口启动检查通过，确认新公共签名模块可随入口正常加载；该结果不代表 Windows 打包已通过。
+
+参考：[CPython 同类时间字段差异记录](https://github.com/python/cpython/issues/157671)、[Python 3.12 路径 stat 实现](https://github.com/python/cpython/blob/3.12/Modules/posixmodule.c)、[Windows chmod 语义](https://docs.python.org/3.12/library/os.html#os.chmod)。
+
 ## 0.5.0 多语言（2026-10-24）
 
 - 完整回归 **69 passed，56.88 秒**；后续标准应用显示名/打包资源与检查器调整后，多语言专项 **12 passed，0.69 秒**。

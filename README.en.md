@@ -2,7 +2,7 @@
 
 [简体中文](README.md) | English
 
-A Python + PySide6 desktop server, version **0.5.0**. It provides multi-user SFTP, directory permissions, login restrictions, and **server-managed file-level incremental synchronization with shared progress per userid**.
+A Python + PySide6 desktop server, version **0.5.1**. It provides multi-user SFTP, directory permissions, login restrictions, and **server-managed file-level incremental synchronization with shared progress per userid**.
 
 ## Startup and environment
 
@@ -147,7 +147,7 @@ The **Incremental sync** tab shows roots, userid, start time, pending, failed, c
 
 ## Data, migration and boundaries
 
-The data directory is displayed at the bottom of the window. Configuration is `config.json`, database `sync.sqlite3`, host key `ssh_host_ed25519_key`. Passwords use randomly salted scrypt hashes. POSIX modes are 0700 for the data directory and 0600 for configuration, database and keys. WAL files reside in the protected directory. Do not put the database on a network share or inside a synchronization target.
+The data directory is displayed at the bottom of the window. Configuration is `config.json`, database `sync.sqlite3`, host key `ssh_host_ed25519_key`. Passwords use randomly salted scrypt hashes. POSIX modes are 0700 for the data directory and 0600 for configuration, database and keys. Windows uses ACLs; chmod does not implement equivalent permission-bit semantics. WAL files reside in the protected directory. Do not put the database on a network share or inside a synchronization target.
 
 [Migration and rollback](docs/en/MIGRATION.md) explains backups, non-merging of v1 progress, userid generation and client state migration. Stop the old program before upgrading. First-time migration backs up configuration and a consistent SQLite snapshot.
 

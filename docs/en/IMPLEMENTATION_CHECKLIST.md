@@ -2,6 +2,15 @@
 
 [简体中文](../IMPLEMENTATION_CHECKLIST.md) | [English home](../../README.en.md)
 
+## 0.5.1 Windows compatibility fix (2026-10-25)
+
+- [x] Normalize path/descriptor signatures with Windows birthtime rather than inconsistent ctime semantics.
+- [x] Keep same-handle raw ctime checks for hashing and automatic confirmation to reject actual changes.
+- [x] Do not assert POSIX 0600 on Windows; retain strict POSIX permission checks elsewhere.
+- [x] Add simulated-Windows, native-file and automatic-confirmation regression cases.
+- [x] Report native metadata in CI, retain failure JUnit artifacts and document diagnostics in both languages.
+- [ ] Native Windows Actions rerun after the fix remains pending.
+
 ## 0.5.0 localization (2026-10-24)
 
 - [x] Match system UI language preferences; Simplified Chinese/English with English fallback.
