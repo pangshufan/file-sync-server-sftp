@@ -62,8 +62,7 @@ def user_serialized(method):
         current = getattr(self, "current_users", None)
         if current is not None and current.get(user.userid) != user:
             raise SyncError("USER_SETTINGS_CHANGED", tr('用户设置已变化，请重新登录'))
-        with self._locks_guard:
-            lock = self._user_locks.setdefault(user.userid, threading.RLock())
+        lock = self._user_lock(user.userid)
         with lock:
             if current is not None and getattr(self, "current_users").get(user.userid) != user:
                 raise SyncError("USER_SETTINGS_CHANGED", tr('用户设置已变化，请重新登录'))
@@ -84,6 +83,15 @@ class SyncAPI:
                 stream.write(secrets.token_bytes(32))
         secret_path.chmod(0o600)
         self.secret = secret_path.read_bytes()
+
+    def configure_users(self, users):
+        """Revoke removed identities before waiting for their in-flight work."""
+        self.current_users = {user.userid: user for user in users}
+        self.store.prune_users(self.current_users, self._user_lock)
+
+    def _user_lock(self, userid):
+        with self._locks_guard:
+            return self._user_locks.setdefault(userid, threading.RLock())
 
     def token(self, data):
         raw = json.dumps(data, separators=(",", ":")).encode()

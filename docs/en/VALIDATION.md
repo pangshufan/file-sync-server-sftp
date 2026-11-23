@@ -2,6 +2,22 @@
 
 [简体中文](../VALIDATION.md) | [English home](../../README.en.md)
 
+## Directory upload attributes (2026-11-23)
+
+Before the fix, a real SFTP recursive `put(..., recurse=True, preserve=True)` reproduced a post-upload SETSTAT permission denial. Mode bits sent together with timestamps caused the entire request to be rejected. SETSTAT/LSETSTAT/FSETSTAT now ignore source mode bits while applying other allowed attributes. Ownership fields are still rejected before any changes, and read-only paths/handles remain protected.
+
+Full macOS arm64 regression: **96 passed in 70.48 seconds**, with JUnit at `build/test-results/pytest.xml`. Two added tests cover recursive uploads preserving attributes, directory SETSTAT/LSETSTAT, writable-handle FSETSTAT, preserved timestamps, unchanged host modes, read-only denial and side-effect-free rejection of mixed ownership/size requests. The existing link isolation test now checks that chmod succeeds without changing permissions. Translation/bilingual documentation and compileall checks passed, as did diff checks for files touched in this round.
+
+Installers were not rebuilt and native Windows CI was not run. Validation uses SFTP protocol regression; the Windows package still requires rebuilding and native confirmation.
+
+## 0.5.3 Deleted-account sync cleanup (2026-10-26)
+
+Account deletion did not clean the sync tables, leaving the old userid visible in statistics. A recreated username already received a distinct userid and did not inherit old progress. Lifecycle reconciliation now performs offline background cleanup after a saved desktop deletion, and removes historical orphan state on startup/reload. Four per-user sync tables are cleaned in batches; shared files and the common catalog remain, and disabled accounts retain progress.
+
+Full macOS arm64 regression: **94 passed in 67.29 seconds**, with JUnit at `build/test-results/pytest.xml`. User-removal and desktop tests: **9 passed in 8.29 seconds**. Six added cases cover independent queues for a recreated username/new userid, multi-batch archived and orphan child rows, retained disabled/sync-disabled accounts, rejection of stale list/ack/automatic confirmation, waiting for in-flight account locks, restart/reload/stopped cleanup, disconnection of old sessions, and desktop database cleanup with shared files preserved. Translation catalog, bilingual document links, compileall and diff checks passed.
+
+Version is 0.5.3; database/config/protocol schemas are unchanged. This round did not rebuild installers or run native Windows/Linux CI; validation covers local source and offscreen desktop tests. Historical leftovers are cleaned on a successful startup with the current config after updating; no manual database deletion is required.
+
 ## 0.5.2 Windows Chinese console encoding fix (2026-10-25)
 
 A subsequent Windows Actions run reported **1 failed, 84 passed, 1 skipped**: the new encoding test incorrectly required LF, while Windows native text streams produce CRLF. This was a platform assumption in the assertion. The test now covers native newlines plus explicit LF/CRLF and strictly verifies both UTF-8 content and preservation of newline policy. Encoding tests: **14 passed in 0.78 seconds**. Application code and packaging configuration need no change; the corrected native Windows Actions result remains pending.

@@ -559,6 +559,11 @@ class MainWindow(QMainWindow):
             field.setEnabled(editable)
 
     def on_completed(self, action, result):
+        if action == "cleanup_users":
+            self.busy = False
+            if result["ok"]:
+                self.render_sync_status(result["value"])
+            self.update_controls()
         if action == "reload":
             self.busy = False
             if result["ok"]:
@@ -593,7 +598,7 @@ class MainWindow(QMainWindow):
             self.append_log(result["error"])
             QMessageBox.warning(self, tr('操作失败'), result["error"])
             self.closing = False
-        if self.closing and action in ("start", "stop", "reload") and result["ok"]:
+        if self.closing and action in ("start", "stop", "reload", "cleanup_users") and result["ok"]:
             if self.running:
                 self.stop()
             else:
@@ -708,10 +713,14 @@ class MainWindow(QMainWindow):
         row = self.user_table.currentRow()
         if row >= 0:
             user = self.config.users[row]
-            if QMessageBox.question(self, tr('删除用户'), tr('删除账号 {value0}？共享目录和文件将保留。', value0=user.username)) == QMessageBox.StandardButton.Yes:
+            if QMessageBox.question(self, tr('删除用户'), tr('删除账号 {value0} 及其同步进度？共享目录和文件将保留。', value0=user.username)) == QMessageBox.StandardButton.Yes:
                 self.config.users.pop(row)
                 if not self.save():
                     self.config.users.insert(row, user)
+                else:
+                    self.busy = True
+                    self.update_controls()
+                    self.bridge.submit("cleanup_users")
                 self.refresh_users()
 
     def closeEvent(self, event):

@@ -392,6 +392,27 @@ class IndexStore:
             if len(rows) < BATCH_SIZE:
                 break
 
+    def prune_users(self, current_users, user_lock):
+        """Remove per-account state in bounded transactions; keep shared catalog."""
+        tables = ("user_files", "sync_completed", "sync_offers", "sync_users")
+        with self.connect(readonly=True) as db:
+            identifiers = [row[0] for row in db.execute(
+                " UNION ".join(f"SELECT userid FROM {table}" for table in tables))]
+        for userid in identifiers:
+            if userid in current_users:
+                continue
+            # Uses the same lock as requests/automatic confirmation. Once the
+            # registry changes, stale workers cannot recreate this account.
+            with user_lock(userid):
+                for table in tables:
+                    while True:
+                        with self.connect() as db:
+                            rows = db.execute(f"SELECT rowid FROM {table} WHERE userid=? LIMIT ?",
+                                              (userid, BATCH_SIZE)).fetchall()
+                            db.executemany(f"DELETE FROM {table} WHERE rowid=?", rows)
+                        if len(rows) < BATCH_SIZE:
+                            break
+
     def summary(self):
         with self.connect(readonly=True) as db:
             roots = [dict(row) for row in db.execute("SELECT roots.*,entries AS files FROM roots")]

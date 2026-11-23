@@ -99,6 +99,57 @@ async def test_read_only_and_directory_override(running):
     assert (root / "hello.txt").read_text() == "hello"
 
 
+async def test_recursive_upload_preserves_times_without_changing_host_permissions(running, tmp_path):
+    _, root, connect, *_ = running
+    source = tmp_path / "monitor-agent-windows-amd64"
+    (source / "bin").mkdir(parents=True)
+    (source / "bin/agent.exe").write_bytes(b"agent binary")
+    timestamp = 1700000000
+    os.utime(source / "bin/agent.exe", (timestamp, timestamp))
+    os.utime(source / "bin", (timestamp, timestamp))
+    async with await connect() as conn, conn.start_sftp_client() as sftp:
+        # Recursive clients apply directory attributes after sending its children.
+        await sftp.put(str(source), "/", recurse=True, preserve=True)
+        remote_dir = root / source.name / "bin"
+        before = remote_dir.stat().st_mode
+        await sftp.setstat(f"/{source.name}/bin", asyncssh.SFTPAttrs(
+            permissions=0o40000, atime=timestamp, mtime=timestamp))
+        await sftp.setstat(f"/{source.name}/bin", asyncssh.SFTPAttrs(
+            permissions=0), follow_symlinks=False)
+        assert remote_dir.stat().st_mode == before
+        assert int(remote_dir.stat().st_mtime) == timestamp
+        remote_file = remote_dir / "agent.exe"
+        before = remote_file.stat().st_mode
+        async with sftp.open(f"/{source.name}/bin/agent.exe", "r+b") as file:
+            await file.setstat(asyncssh.SFTPAttrs(permissions=0, atime=timestamp, mtime=timestamp))
+        assert remote_file.stat().st_mode == before
+        assert int(remote_file.stat().st_mtime) == timestamp
+        assert remote_file.read_bytes() == b"agent binary"
+
+
+async def test_upload_metadata_still_obeys_account_rules_and_rejects_ownership(running):
+    _, root, connect, *_ = running
+    timestamp = 1700000000
+    original = (root / "hello.txt").stat()
+    async with await connect("reader") as conn, conn.start_sftp_client() as sftp:
+        for attrs in (asyncssh.SFTPAttrs(permissions=0o777),
+                      asyncssh.SFTPAttrs(atime=timestamp, mtime=timestamp)):
+            with pytest.raises(asyncssh.SFTPPermissionDenied):
+                await sftp.setstat("/hello.txt", attrs)
+        async with sftp.open("/hello.txt", "rb") as file:
+            with pytest.raises(asyncssh.SFTPPermissionDenied):
+                await file.setstat(asyncssh.SFTPAttrs(permissions=0o777))
+    async with await connect() as conn, conn.start_sftp_client() as sftp:
+        with pytest.raises(asyncssh.SFTPPermissionDenied):
+            await sftp.setstat("/hello.txt", asyncssh.SFTPAttrs(
+                permissions=0o777, uid=123, gid=456, size=0))
+        async with sftp.open("/hello.txt", "r+b") as file:
+            with pytest.raises(asyncssh.SFTPPermissionDenied):
+                await file.setstat(asyncssh.SFTPAttrs(uid=123, gid=456, size=0))
+    assert (root / "hello.txt").stat().st_mode == original.st_mode
+    assert (root / "hello.txt").read_text() == "hello"
+
+
 async def test_accounts_and_disconnect(running):
     service, _, connect, _, events, _ = running
     for user, password in [("admin", "wrong"), ("unknown", "test-password"), ("disabled", "test-password")]:
@@ -129,8 +180,9 @@ async def test_escape_and_link_restrictions(running, tmp_path):
             await sftp.symlink("/hello.txt", "/link")
         with pytest.raises(asyncssh.SFTPPermissionDenied):
             await sftp.link("/hello.txt", "/hard")
-        with pytest.raises(asyncssh.SFTPPermissionDenied):
-            await sftp.chmod("/hello.txt", 0o777)
+        before = (root / "hello.txt").stat().st_mode
+        await sftp.chmod("/hello.txt", 0o777)
+        assert (root / "hello.txt").stat().st_mode == before
         assert "escape" not in await sftp.listdir("/")
     assert outside.read_text() == "outside"
 

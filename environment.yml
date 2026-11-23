@@ -1,8 +1,12 @@
 name: sync-env
 channels:
+  - conda-forge
   - defaults
 dependencies:
   - python=3.12
+  - openjdk=17
+  - maven
   - pip
   - pip:
       - -e .[dev,interop]
+

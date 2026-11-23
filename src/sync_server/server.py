@@ -201,8 +201,12 @@ class RestrictedSFTP(asyncssh.SFTPServer):
 
     @staticmethod
     def check_attrs(attrs):
-        if any(getattr(attrs, key, None) is not None for key in ("uid", "gid", "owner", "group", "permissions")):
+        if any(getattr(attrs, key, None) is not None for key in ("uid", "gid", "owner", "group")):
             raise asyncssh.SFTPPermissionDenied(tr('不允许修改系统权限或文件所有者'))
+        # Recursive upload clients send source mode bits with the final times.
+        # Ignore those bits, as open/mkdir already do, so they cannot change
+        # host permissions or turn Windows files read-only via os.chmod().
+        attrs.permissions = None
 
     def mkdir(self, path, attrs):
         self.check(path, "mkdir")
@@ -451,7 +455,7 @@ class SFTPService:
         from .sync_api import SyncAPI
         self.index = await asyncio.to_thread(IndexStore, self.data_dir)
         self.sync_api = await asyncio.to_thread(SyncAPI, self.index)
-        self.sync_api.current_users = {user.userid: user for user in config.users}
+        await asyncio.to_thread(self.sync_api.configure_users, config.users)
         for user in config.users:
             await asyncio.to_thread(self.sync_api.ensure_user, user)
         self.listener = await asyncssh.create_server(
@@ -493,6 +497,7 @@ class SFTPService:
             for auth in list(self.connections.values()):
                 if auth.user and auth.user.userid in changed:
                     await self.disconnect(auth.identifier)
+            await asyncio.to_thread(self.sync_api.configure_users, updated.users)
             self.audit_event("config_reloaded", detail=f"changed_accounts={len(changed)}")
             self.emit("log", tr('配置已热加载 · {value0} 个账号设置变化；其在线连接已断开', value0=len(changed)))
             return {"changed_accounts": len(changed)}
@@ -529,6 +534,28 @@ class SFTPService:
         if self.process_lock:
             self.process_lock.close()
             self.process_lock = None
+
+    async def cleanup_users(self):
+        """Reconcile persisted accounts while the desktop service is stopped."""
+        if self.listener:
+            raise ValueError(tr('请先停止服务'))
+        def cleanup():
+            from .index import IndexStore
+            from .sync_api import SyncAPI
+            lock = ProcessLock(self.data_dir / "server.lock")
+            try:
+                config = ConfigStore(self.data_dir).load()
+                if (self.data_dir / "sync.sqlite3").exists():
+                    store = IndexStore(self.data_dir)
+                    try:
+                        SyncAPI(store).configure_users(config.users)
+                        return store.summary()
+                    finally:
+                        store.close()
+            finally:
+                lock.close()
+            return {"roots": [], "users": []}
+        return await asyncio.to_thread(cleanup)
 
     async def sync_status(self):
         if not self.index or self.index._closed:

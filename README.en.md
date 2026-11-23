@@ -2,7 +2,7 @@
 
 [简体中文](README.md) | English
 
-A Python + PySide6 desktop server, version **0.5.2**. It provides multi-user SFTP, directory permissions, login restrictions, and **server-managed file-level incremental synchronization with shared progress per userid**.
+A Python + PySide6 desktop server, version **0.5.3**. It provides multi-user SFTP, directory permissions, login restrictions, and **server-managed file-level incremental synchronization with shared progress per userid**.
 
 ## Startup and environment
 
@@ -50,6 +50,8 @@ The interface follows system UI language preferences at startup. Chinese prefere
 ## Users, login and directory permissions
 
 A userid is permanent and survives username changes. Each userid has one shared incremental progress record. Using the same account on two machines shares results rather than creating separate device tasks.
+
+Deleting an account also removes its pending/failed/completed state, archived completions and download offers. Recreating the same username assigns a new userid with independent progress. Disabling an account preserves its progress. Shared files and the common file catalog are kept. Startup and configuration reload also clean up historical state belonging to deleted accounts; see [account cleanup](docs/en/OPERATIONS.md#account-deletion-and-sync-state).
 
 | Setting | Behavior |
 | --- | --- |
@@ -153,7 +155,7 @@ The data directory is displayed at the bottom of the window. Configuration is `c
 
 [Protocol v2](docs/en/sync-protocol-v2.md) is the current external contract. [Protocol v1](docs/en/sync-protocol-v1.md) is historical only. The [standalone Paramiko example](examples/paramiko_pull.py) demonstrates v2 requests, standard get and explicit acknowledgement without this SDK.
 
-The server provides only SFTP v3. Shell, command execution, SCP and forwarding are disabled. Symbolic links, multiple hard links, devices and FIFOs are rejected; changing system ownership/permissions is prohibited. Disable “preserve original permissions” in clients. Path isolation is application-level; shared local directories must be managed by trusted processes. It is not an OS sandbox against malicious concurrent local path replacement.
+The server provides only SFTP v3. Shell, command execution, SCP and forwarding are disabled. Symbolic links, multiple hard links, devices and FIFOs are rejected. Source mode bits in upload creation and subsequent SETSTAT/FSETSTAT requests are ignored, leaving host permissions and Windows read-only attributes unchanged. Upload permission allows file/directory timestamp updates; ownership changes remain rejected. Enabling “preserve original permissions” no longer fails directory uploads for mode bits, but those bits are not reproduced on the server. Standalone chmod requests likewise succeed without changing permissions. Path isolation is application-level; shared local directories must be managed by trusted processes. It is not an OS sandbox against malicious concurrent local path replacement.
 
 Portable builds support macOS, Windows and Linux. A Qt-free headless entry and systemd/launchd/Windows WinSW templates are included, requiring deployment-specific configuration and manual installation. There are no historical content snapshots, block-level deltas or multi-writer conflict merging. Runtime logs persist as rotating JSONL; the UI retains the latest 2,000 lines. Passwords, private keys and full configuration are not logged. See [Operations](docs/en/OPERATIONS.md).
 

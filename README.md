@@ -2,7 +2,7 @@
 
 简体中文 | [English](README.en.md)
 
-Python + PySide6 桌面服务端，当前版本 0.5.2。提供多用户 SFTP、目录权限、登录限制，以及 **server 配置、按 userid 共享进度的文件级增量同步**。
+Python + PySide6 桌面服务端，当前版本 0.5.3。提供多用户 SFTP、目录权限、登录限制，以及 **server 配置、按 userid 共享进度的文件级增量同步**。
 
 ## 启动与环境
 
@@ -48,6 +48,8 @@ python -m pip install --no-deps -e .
 ## 用户、登录和目录权限
 
 userid 为固定标识，编辑用户名不会改变它。每个 userid 只有一份增量进度；同账号在两台机器上使用时，共享同步结果，不分别维护设备任务。
+
+删除账号会清理其待同步、失败、成功及归档记录和下载确认凭据；重建同名账号会生成新 userid，独立计算进度。停用账号保留进度。共享文件和公共文件总表保留。服务启动及配置热加载也会清理历史已删除账号的残留，详见[账号清理说明](docs/OPERATIONS.md#删除账号与同步数据)。
 
 | 设置 | 行为 |
 | --- | --- |
@@ -149,9 +151,9 @@ async def pull(password):
 
 [升级/回滚说明](docs/MIGRATION.md) 解释自动备份、旧进度不合并、userid 生成和客户端状态迁移。升级前停止旧程序；首次升级会备份配置及 SQLite 的一致性快照。
 
-[协议 v2](docs/sync-protocol-v2.md) 是当前对外约定；[协议 v1](docs/sync-protocol-v1.md) 仅作历史参考。[独立 Paramiko 示例](examples/paramiko_pull.py) 不依赖 SDK，展示 v2 查询、标准 get 和主动确认。
+[协议 v2](docs/sync-protocol-v2.md) 是当前对外约定；[协议 v1](docs/sync-protocol-v1.md) 仅作历史参考。[独立 Paramiko 示例](examples/paramiko_pull.py) 不依赖 SDK，展示 v2 查询、标准 get 和主动确认；[Java SDK 与示例](java/README.md) 提供基于 Apache MINA SSHD（JDK 17+ / Maven）的客户端库与集成示例。
 
-服务仅提供 SFTP v3，禁用 Shell、命令、SCP 和端口转发；拒绝符号链接、多硬链接及设备/FIFO，禁止修改系统所有者/权限。客户端应关闭“保留原文件权限”。路径隔离是应用级机制，本地目录应由可信进程管理，不是针对本机恶意并发替换的操作系统沙箱。
+服务仅提供 SFTP v3，禁用 Shell、命令、SCP 和端口转发；拒绝符号链接、多硬链接及设备/FIFO。上传创建和后续 SETSTAT/FSETSTAT 中的原文件权限位会被忽略，不修改主机权限或 Windows 只读属性；有上传权限时允许更新文件/目录时间戳，所有者修改仍拒绝。客户端开启“保留原文件权限”不会因此导致目录上传失败，但权限位不会在服务端复现；单独 chmod 请求也只返回成功而不改变权限。路径隔离是应用级机制，本地目录应由可信进程管理，不是针对本机恶意并发替换的操作系统沙箱。
 
 提供 macOS、Windows、Linux 便携应用打包配置，详见下节。提供无 Qt 的无头服务入口与 systemd、launchd、Windows WinSW 服务模板，需按部署路径配置并手动安装。当前不提供历史内容快照、块级差分或多人双向冲突合并。运行日志持久保存为轮转 JSONL，窗口显示最近 2000 条；日志不记录密码、私钥和完整配置。详见 [运维说明](docs/OPERATIONS.md)。
 

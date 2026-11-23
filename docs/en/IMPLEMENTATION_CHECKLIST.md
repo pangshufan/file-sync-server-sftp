@@ -2,6 +2,21 @@
 
 [简体中文](../IMPLEMENTATION_CHECKLIST.md) | [English home](../../README.en.md)
 
+## Directory upload attributes (2026-11-23)
+
+- [x] Ignore source mode bits in SETSTAT/LSETSTAT/FSETSTAT, retaining time/size handling for writable targets.
+- [x] Retain upload path permissions, writable-handle checks and ownership restrictions.
+- [x] Cover real recursive uploads preserving attributes, directory/handle attributes, unchanged host modes and ownership rejection.
+- [x] Update bilingual permission docs, including chmod compatibility no-ops.
+
+## 0.5.3 Deleted-account sync cleanup (2026-10-26)
+
+- [x] Desktop deletion cleans four sync tables for the old userid in background batches, retaining shared files and the common index.
+- [x] Startup/reload remove historical orphan identities; disabled accounts retain progress.
+- [x] Account locks wait for in-flight work; stale requests and automatic confirmations cannot restore deleted state.
+- [x] Cover username reuse, batches/orphans, concurrency, restart, reload and offline desktop deletion.
+- [x] Update bilingual confirmation messages and operations documentation.
+
 ## 0.5.2 Windows Chinese output fix (2026-10-25)
 
 - [x] Explicit UTF-8 stdout/stderr initialization before client/headless help and errors.
