@@ -31,6 +31,43 @@ def wait_until(application, predicate):
     assert predicate(), "GUI state update timed out"
 
 
+def test_delete_user_cleans_sync_state_while_stopped(application, tmp_path, monkeypatch):
+    from sync_server.config import User, hash_password
+    from sync_server.index import IndexStore
+    from sync_server.sync_api import SyncAPI
+    root = tmp_path / "shared"
+    root.mkdir()
+    (root / "keep.txt").write_text("keep")
+    user = User("temp", hash_password("test-password"), str(root))
+    directory = tmp_path / "state"
+    ConfigStore(directory).save(Config(users=[user]))
+    store = IndexStore(directory)
+    try:
+        store.scan(store.register(str(root)))
+        SyncAPI(store).refresh(user)
+    finally:
+        store.close()
+    monkeypatch.setattr(QMessageBox, "question", lambda *_: QMessageBox.StandardButton.Yes)
+    window = MainWindow(directory)
+    try:
+        window.user_table.selectRow(0)
+        window.remove_user()
+        wait_until(application, lambda: not window.busy)
+        assert not ConfigStore(directory).load().users
+        assert window.task_table.rowCount() == 0
+        store = IndexStore(directory)
+        try:
+            assert not store.summary()["users"]
+            with store.connect(readonly=True) as db:
+                assert db.execute("SELECT count(*) FROM user_files").fetchone()[0] == 0
+        finally:
+            store.close()
+        assert (root / "keep.txt").read_text() == "keep"
+    finally:
+        window.close()
+        application.processEvents()
+
+
 def test_user_dialog_and_service_lifecycle(application, tmp_path):
     root = tmp_path / "shared"
     root.mkdir()

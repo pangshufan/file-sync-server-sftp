@@ -2,6 +2,20 @@
 
 [简体中文](../OPERATIONS.md) | [English home](../../README.en.md)
 
+## Directory uploads and SETSTAT permissions
+
+The 2026-11-23 fix addresses `remote setstat ... Permission denied` at the end of a directory upload. Previously, SETSTAT/LSETSTAT/FSETSTAT requests containing permissions were always rejected. Recursive clients often send mode bits together with timestamps after uploading, so granting all application permissions did not prevent the error.
+
+Mode bits are now ignored consistently with file/directory creation, allowing timestamps on writable paths and size updates on writable files to proceed. Mode-only chmod requests succeed without changing host permissions or setting Windows files read-only. SETSTAT/LSETSTAT still require upload permission on the target; FSETSTAT still requires a writable handle. Requests containing uid/gid/owner/group are rejected as a whole before truncation or timestamp changes. The service process's Windows ACLs still determine actual filesystem access. Until updating older builds, disable the client's “preserve original permissions”; also disable ownership preservation if the client sends owner fields.
+
+## Account deletion and sync state
+
+Version 0.5.3 fixes stale sync progress after account deletion. Accounts are identified by userid; a username is a login name. Recreating a deleted username generates a new userid and does not inherit completion state. After a desktop deletion is saved, background cleanup removes that userid from `sync_users`, `user_files`, `sync_completed` and `sync_offers`. Starting or editing is disabled until cleanup finishes. Disabling an account or its incremental sync does not delete progress.
+
+Startup and an applied configuration reload also remove identities absent from the current config, repairing old leftovers and offline config edits. Successfully start the updated server with the current config once to clean historical orphan records; no manual database changes are needed. External config.json edits affect a running service after reload or restart.
+
+Reload revokes the old identity, disconnects it, waits for in-flight operations for that userid and deletes state in batches of up to 200 rows. Stale requests and automatic confirmations cannot recreate removed state. Interrupted cleanup resumes on the next startup. The data-directory process lock prevents offline desktop cleanup from writing alongside another service. Cleanup retains actual shared files, the common catalog/index, client caches, audit logs and historical backups, and does not guarantee immediate SQLite file shrinkage. Recreating a username cannot restore deleted sync progress.
+
 ## Database access and transactions
 
 Each IndexStore reuses one write connection protected by a write lock. Up to four independent read-only connections serve status/details and queue-boundary reads. They use query_only and hold snapshots for the query scope. PRAGMAs are set when connections are created rather than for every operation. WAL readers see committed snapshots, never uncommitted updates.

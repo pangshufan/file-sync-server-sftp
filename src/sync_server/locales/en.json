@@ -1,4 +1,6 @@
 {
+  "请先停止服务": "Stop the server first",
+  "删除账号 {value0} 及其同步进度？共享目录和文件将保留。": "Delete account {value0} and its sync progress? Shared directories and files will be kept.",
   "配置热加载失败，运行配置保持原值 · {value0}": "Configuration reload failed; running configuration unchanged · {value0}",
   "Simple Sync 无头 SFTP 服务（无 Qt 依赖）": "Simple Sync headless SFTP server (no Qt dependency)",
   "包含 config.json 的专用应用数据目录": "Dedicated application data directory containing config.json",
